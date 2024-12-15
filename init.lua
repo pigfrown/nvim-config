@@ -161,9 +161,6 @@ require('lazy').setup({
       vim.o.foldlevelstart = 99
       vim.o.foldenable = true
 
-      -- Using ufo provider need remap `zR` and `zM`. If Neovim is 0.6.1, remap yourself
-      vim.keymap.set('n', 'zR', require('ufo').openAllFolds)
-      vim.keymap.set('n', 'zM', require('ufo').closeAllFolds)
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       capabilities.textDocument.foldingRange = {
         dynamicRegistration = false,
@@ -176,7 +173,42 @@ require('lazy').setup({
           -- you can add other fields for setting up lsp server in this table
         }
       end
-      require('ufo').setup()
+
+      -- Using ufo provider need remap `zR` and `zM`. If Neovim is 0.6.1, remap yourself
+      vim.keymap.set('n', 'zR', require('ufo').openAllFolds, { desc = 'Open all folds' })
+      vim.keymap.set('n', 'zM', require('ufo').closeAllFolds, { desc = 'Close all folds' })
+      vim.keymap.set('n', 'zr', require('ufo').openFoldsExceptKinds, { desc = 'Open folds except certain kinds' })
+      vim.keymap.set('n', 'zm', require('ufo').closeFoldsWith, { desc = 'Close folds with a certain level' })
+
+      vim.keymap.set('n', 'K', function()
+        local winid = require('ufo').peekFoldedLinesUnderCursor()
+        if not winid then
+          vim.lsp.buf.hover()
+        end
+      end, { desc = 'Peek fold or show hover' })
+
+      require('ufo').setup {
+        open_fold_hl_timeout = 150,
+        enable_get_fold_virt_text = false,
+        close_fold_kinds_for_ft = {
+          default = { 'imports', 'comment' },
+          json = { 'region' },
+          c = { 'comment', 'region' },
+        },
+        preview = {
+          win_config = {
+            border = { 'rounded' },
+            winhighlight = 'Normal:Folded',
+            winblend = 0,
+          },
+          mappings = {
+            scrollU = '<C-u>',
+            scrollD = '<C-d>',
+            jumpTop = '[',
+            jumpBot = ']',
+          },
+        },
+      }
     end,
   },
   -- Buffer lines
